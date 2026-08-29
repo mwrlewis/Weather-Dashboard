@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mike's Weather Dashboard</title>
+<style>
+  :root{
+    --ink:#1b2430;
+    --ink-soft:#4b5768;
+    --ink-faint:#8894a3;
+    --paper:#f4f6f8;
+    --card:#ffffff;
+    --line:#dde2e8;
+    --slate:#3b5169;
+    --slate-deep:#22344a;
+    --sky:#e8eef4;
+    --amber:#b5791a;
+    --amber-bg:#fbf1de;
+    --red:#a3372d;
+    --red-bg:#faeae8;
+    --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2px solid var(--slate-deep);
+    padding-bottom:16px;margin-bottom:24px;
+  }
+  header.top h1{
+    font-size:24px;font-weight:700;letter-spacing:-0.01em;margin:0;color:var(--slate-deep);
+  }
+  header.top .tag{font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+  header.top .clock{font-family:var(--mono);font-size:12px;color:var(--ink-soft);text-align:right;}
+  header.top .clock span{display:block;}
+
+  section{margin-bottom:26px;}
+  .section-label{
+    font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink-faint);margin:0 0 10px;
+  }
+
+  /* --- top forecast row: SLC / Park City / Alta --- */
+  .loc-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .loc-card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;}
+  .loc-card h2{font-size:14px;font-weight:700;margin:0 0 10px;color:var(--slate-deep);}
+  .loc-card .now{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .loc-card .now img{width:40px;height:40px;}
+  .loc-card .now .t{font-family:var(--mono);font-size:26px;font-weight:600;}
+  .loc-card .now .s{font-size:12px;color:var(--ink-soft);}
+  .loc-card .next{font-size:11px;color:var(--ink-faint);margin:0 0 12px;}
+  .loc-card a{font-size:12px;margin-top:auto;color:var(--slate);}
+  .loc-card .stale{color:var(--ink-faint);font-family:var(--mono);font-size:12px;margin:4px 0 12px;}
+
+  /* --- full-width embed panels (Cottonwood Canyons forecast, Forecast discussion) --- */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;}
+  .panel h2{font-size:14px;font-weight:700;margin:0 0 6px;color:var(--slate-deep);}
+  .panel .sub{font-size:11px;color:var(--ink-faint);margin:0 0 12px;}
+  .panel a.out{font-size:12px;color:var(--slate);display:inline-block;margin-top:10px;}
+
+  .embed-frame{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--sky);}
+  .embed-frame iframe{width:100%;height:520px;border:0;display:block;background:#fff;}
+  .embed-frame .loading{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:12px;color:var(--ink-faint);background:var(--sky);
+    pointer-events:none;transition:opacity .3s;
+  }
+
+  .afd-text{
+    background:var(--sky);border:1px solid var(--line);border-radius:6px;padding:14px 16px;
+    font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--ink-soft);
+    white-space:pre-wrap;max-height:420px;overflow-y:auto;
+  }
+
+  .canyon-title{font-size:20px;font-weight:700;color:var(--slate-deep);margin:0 0 14px;padding-top:6px;border-top:2px solid var(--slate-deep);padding-top:18px;}
+
+  .stations{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .station{background:var(--sky);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
+  .station .name{font-size:12px;font-weight:600;color:var(--ink);}
+  .station .id{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-bottom:8px;}
+  .station .metric{font-family:var(--mono);font-size:20px;font-weight:600;}
+  .station .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .station .unavailable{font-family:var(--mono);font-size:13px;color:var(--ink-faint);}
+
+  .stale{color:var(--ink-faint);font-family:var(--mono);font-size:14px;}
+
+  footer{
+    margin-top:30px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--ink-faint);font-family:var(--mono);
+  }
+  a{color:var(--slate);}
+
+  @media (max-width:900px){
+    .loc-row{grid-template-columns:1fr;}
+    .stations{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Mike's Weather Dashboard</h1>
+      <p class="tag">Salt Lake &middot; Park City &middot; Alta &middot; Cottonwood Canyons</p>
+    </div>
+    <div class="clock">
+      <span id="clock-time">--</span>
+      <span id="clock-status" style="color:var(--ink-faint);">connecting to feeds&hellip;</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="loc-row">
+      <div class="loc-card">
+        <h2>Salt Lake City</h2>
+        <div id="loc-slc"><p class="stale">Loading forecast&hellip;</p></div>
+        <a href="https://forecast.weather.gov/MapClick.php?lat=40.73495526447499&lon=-111.86529085019185" target="_blank" rel="noopener">Full forecast on weather.gov &rarr;</a>
+      </div>
+      <div class="loc-card">
+        <h2>Park City</h2>
+        <div id="loc-parkcity"><p class="stale">Loading forecast&hellip;</p></div>
+        <a href="https://forecast.weather.gov/MapClick.php?lat=40.6511&lon=-111.5084" target="_blank" rel="noopener">Full forecast on weather.gov &rarr;</a>
+      </div>
+      <div class="loc-card">
+        <h2>Alta</h2>
+        <div id="loc-alta"><p class="stale">Loading forecast&hellip;</p></div>
+        <a href="https://forecast.weather.gov/MapClick.php?lat=40.5885&lon=-111.6448" target="_blank" rel="noopener">Full forecast on weather.gov &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <h2>Cottonwood Canyons forecast</h2>
+      <p class="sub">NWS Salt Lake avalanche &amp; canyon weather forecast, embedded live below.</p>
+      <div class="embed-frame">
+        <div class="loading" id="canyon-loading">loading weather.gov&hellip;</div>
+        <iframe id="canyon-iframe" src="https://www.weather.gov/slc/AvalancheWeather" title="Cottonwood Canyons forecast" loading="lazy"></iframe>
+      </div>
+      <a class="out" href="https://www.weather.gov/slc/AvalancheWeather" target="_blank" rel="noopener">Open in a new tab &rarr;</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <h2>Forecast discussion</h2>
+      <p class="sub">Latest Area Forecast Discussion from the NWS Salt Lake City office.</p>
+      <div class="afd-text" id="afd-text">Loading forecast discussion&hellip;</div>
+      <a class="out" href="https://forecast.weather.gov/product.php?site=SLC&issuedby=SLC&product=AFD&format=CI&version=1&glossary=1" target="_blank" rel="noopener">Open on weather.gov &rarr;</a>
+    </div>
+  </section>
+
+  <p class="canyon-title">Alta</p>
+
+  <section>
+    <div class="panel">
+      <h2>Snowfall &amp; wind</h2>
+      <p class="sub">Live station observations (temp, wind, snow depth) within 3 miles of Alta, via the Synoptic Data (MesoWest) API.</p>
+      <div class="stations" id="alta-stations">
+        <p class="stale" style="grid-column:1/-1;">Loading stations&hellip;</p>
+      </div>
+      <a class="out" href="https://viewer.synopticdata.com/map/data/now/air-temperature#map=11/40.5885/-111.6448" target="_blank" rel="noopener">View on the Synoptic Data map &rarr;</a>
+    </div>
+  </section>
+
+  <footer>
+    Data: NWS API (api.weather.gov) for point forecasts and forecast discussion, NWS Salt Lake (weather.gov/slc) for the Cottonwood Canyons forecast, Synoptic Data (api.synopticdata.com) for Alta station observations.
+    <br>The Cottonwood Canyons forecast panel loads its source page directly in an iframe &mdash; if it stays blank, the source site may block embedding; use the "Open in a new tab" link below it.
+    <br>Synoptic Data requires a free API token (see README) &mdash; set it in <code>SYNOPTIC_TOKEN</code> below, or better, proxy it server-side before deploying.
+  </footer>
+
+</div>
+
+<script>
+const HEADERS = { 'User-Agent': '(mikes-weather-dashboard-prototype, contact@example.com)' };
+
+// Synoptic Data (MesoWest) API — get a free token at https://customer.synopticdata.com/, then set it here
+// (or better, proxy it server-side before deploying, same as any API key shipped in page source)
+const SYNOPTIC_TOKEN = 'YOUR_SYNOPTIC_API_TOKEN';
+const ALTA_LAT = 40.5885, ALTA_LON = -111.6448;
+
+function setClock(){
+  document.getElementById('clock-time').textContent =
+    new Date().toLocaleString('en-US', { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+}
+setClock();
+setInterval(setClock, 60000);
+
+async function fetchJSON(url){
+  const res = await fetch(url, { headers: HEADERS });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// --- Point forecast cards (SLC / Park City / Alta) via NWS grid forecast ---
+async function loadLocation(elId, lat, lon){
+  const el = document.getElementById(elId);
+  try{
+    const point = await fetchJSON(`https://api.weather.gov/points/${lat},${lon}`);
+    const forecast = await fetchJSON(point.properties.forecast);
+    const periods = forecast.properties.periods;
+    const now = periods[0];
+    const next = periods[1];
+    el.innerHTML = `
+      <div class="now">
+        <img src="${now.icon}" alt="${now.shortForecast}">
+        <div>
+          <span class="t">${now.temperature}&deg;<small style="font-family:var(--sans);font-size:12px;font-weight:400;">f</small></span>
+          <div class="s">${now.name}: ${now.shortForecast}</div>
+        </div>
+      </div>
+      <p class="next">${next.name}: ${next.temperature}&deg;, ${next.shortForecast}</p>`;
+    document.getElementById('clock-status').textContent = 'live';
+    document.getElementById('clock-status').style.color = '#3b8f5c';
+  } catch(err){
+    el.innerHTML = `<p class="stale">Forecast unavailable (${err.message}).</p>`;
+  }
+}
+
+// --- Forecast discussion: latest AFD text product for the SLC office ---
+async function loadForecastDiscussion(){
+  const el = document.getElementById('afd-text');
+  try{
+    const list = await fetchJSON('https://api.weather.gov/products/types/AFD/locations/SLC');
+    const latest = list['@graph'] && list['@graph'][0];
+    if(!latest) throw new Error('no products returned');
+    const product = await fetchJSON(`https://api.weather.gov/products/${latest.id}`);
+    el.textContent = product.productText || 'Discussion text unavailable.';
+  } catch(err){
+    el.innerHTML = `Forecast discussion unavailable right now (${err.message}). <a href="https://forecast.weather.gov/product.php?site=SLC&issuedby=SLC&product=AFD&format=CI&version=1&glossary=1" target="_blank" rel="noopener">View on weather.gov &rarr;</a>`;
+  }
+}
+
+// --- Alta station observations (temp, wind, snow depth) via Synoptic Data ---
+async function loadAltaStations(){
+  const grid = document.getElementById('alta-stations');
+  if(SYNOPTIC_TOKEN === 'YOUR_SYNOPTIC_API_TOKEN'){
+    grid.innerHTML = `<p class="stale" style="grid-column:1/-1;">Add a Synoptic Data API token (see README) to enable this panel. <a href="https://customer.synopticdata.com/" target="_blank" rel="noopener">Get a free token &rarr;</a></p>`;
+    return;
+  }
+  try{
+    const url = `https://api.synopticdata.com/v2/stations/latest?radius=${ALTA_LAT},${ALTA_LON},3&limit=8&units=english&vars=air_temp,wind_speed,wind_gust,snow_depth,snow_accum&token=${SYNOPTIC_TOKEN}`;
+    const data = await fetchJSON(url);
+    const stations = data.STATION || [];
+    if(stations.length === 0){
+      grid.innerHTML = '<p class="stale" style="grid-column:1/-1;">No stations reporting near Alta right now.</p>';
+      return;
+    }
+    grid.innerHTML = '';
+    stations.forEach(st => {
+      const obs = st.OBSERVATIONS || {};
+      const temp = obs.air_temp_value_1 && obs.air_temp_value_1.value;
+      const wind = obs.wind_speed_value_1 && obs.wind_speed_value_1.value;
+      const gust = obs.wind_gust_value_1 && obs.wind_gust_value_1.value;
+      const snowDepth = obs.snow_depth_value_1 && obs.snow_depth_value_1.value;
+
+      const card = document.createElement('div');
+      card.className = 'station';
+      if(temp == null && wind == null && snowDepth == null){
+        card.innerHTML = `
+          <p class="name">${st.NAME || st.STID}</p>
+          <p class="id">${st.STID}</p>
+          <p class="unavailable">No recent data</p>`;
+      } else {
+        card.innerHTML = `
+          <p class="name">${st.NAME || st.STID}</p>
+          <p class="id">${st.STID}</p>
+          <p class="metric">${temp != null ? Math.round(temp) + '&deg;f' : '--'}</p>
+          <p class="sub">${wind != null ? 'wind ' + Math.round(wind) + ' mph' + (gust != null ? ' (gust ' + Math.round(gust) + ')' : '') : 'wind n/a'}</p>
+          <p class="sub">${snowDepth != null ? 'snow depth ' + Math.round(snowDepth) + '"' : 'snow depth n/a'}</p>`;
+      }
+      grid.appendChild(card);
+    });
+  } catch(err){
+    grid.innerHTML = `<p class="stale" style="grid-column:1/-1;">Synoptic Data unavailable right now (${err.message}). <a href="https://viewer.synopticdata.com/map/data/now/air-temperature#map=11/${ALTA_LAT}/${ALTA_LON}" target="_blank" rel="noopener">View on the Synoptic Data map &rarr;</a></p>`;
+  }
+}
+
+// hide the "loading..." overlay on an iframe once it fires 'load'
+// (note: this fires even if the embedded page's own content failed inside the frame,
+// since cross-origin frames don't expose that detail to the parent page)
+function wireEmbed(iframeId, loadingId){
+  const frame = document.getElementById(iframeId);
+  const loading = document.getElementById(loadingId);
+  frame.addEventListener('load', () => { loading.style.opacity = '0'; });
+}
+
+loadLocation('loc-slc', 40.73495526447499, -111.86529085019185);
+loadLocation('loc-parkcity', 40.6511, -111.5084);
+loadLocation('loc-alta', ALTA_LAT, ALTA_LON);
+loadForecastDiscussion();
+loadAltaStations();
+wireEmbed('canyon-iframe', 'canyon-loading');
+</script>
+</body>
+</html>
