@@ -84,7 +84,13 @@
 
   .canyon-title{font-size:20px;font-weight:700;color:var(--slate-deep);margin:0 0 14px;padding-top:6px;border-top:2px solid var(--slate-deep);padding-top:18px;}
 
-  .alta-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .stations{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .station{background:var(--sky);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
+  .station .name{font-size:12px;font-weight:600;color:var(--ink);}
+  .station .id{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-bottom:8px;}
+  .station .metric{font-family:var(--mono);font-size:20px;font-weight:600;}
+  .station .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .station .unavailable{font-family:var(--mono);font-size:13px;color:var(--ink-faint);}
 
   .stale{color:var(--ink-faint);font-family:var(--mono);font-size:14px;}
 
@@ -96,7 +102,7 @@
 
   @media (max-width:900px){
     .loc-row{grid-template-columns:1fr;}
-    .alta-row{grid-template-columns:1fr;}
+    .stations{grid-template-columns:repeat(2,1fr);}
   }
 </style>
 </head>
@@ -160,24 +166,29 @@
   <section>
     <div class="panel">
       <h2>Snowfall &amp; wind</h2>
-      <p class="sub">Live station data (hourly snowfall, snow-water equivalent, and Base/Mid/Baldy wind) from wxstns.net, embedded below.</p>
-      <div class="embed-frame">
-        <div class="loading" id="alta-loading">loading wxstns.net&hellip;</div>
-        <iframe id="alta-iframe" src="https://wxstns.net/ALTA.html" title="Alta snowfall and wind" loading="lazy" style="height:900px;"></iframe>
+      <p class="sub">Live station observations (temp, wind, snow depth) within 3 miles of Alta, via the Synoptic Data (MesoWest) API.</p>
+      <div class="stations" id="alta-stations">
+        <p class="stale" style="grid-column:1/-1;">Loading stations&hellip;</p>
       </div>
-      <a class="out" href="https://wxstns.net/ALTA.html" target="_blank" rel="noopener">Open in a new tab &rarr;</a>
+      <a class="out" href="https://viewer.synopticdata.com/map/data/now/air-temperature#map=11/40.5885/-111.6448" target="_blank" rel="noopener">View on the Synoptic Data map &rarr;</a>
     </div>
   </section>
 
   <footer>
-    Data: NWS API (api.weather.gov) for point forecasts and forecast discussion, NWS Salt Lake (weather.gov/slc) for the Cottonwood Canyons forecast, wxstns.net for Alta snowfall/wind station data.
-    <br>Embedded panels (Cottonwood Canyons forecast, Alta snowfall &amp; wind) load their source page directly in an iframe &mdash; if a panel stays blank, the source site may block embedding; use the "Open in a new tab" link below it.
+    Data: NWS API (api.weather.gov) for point forecasts and forecast discussion, NWS Salt Lake (weather.gov/slc) for the Cottonwood Canyons forecast, Synoptic Data (api.synopticdata.com) for Alta station observations.
+    <br>The Cottonwood Canyons forecast panel loads its source page directly in an iframe &mdash; if it stays blank, the source site may block embedding; use the "Open in a new tab" link below it.
+    <br>Synoptic Data requires a free API token (see README) &mdash; set it in <code>SYNOPTIC_TOKEN</code> below, or better, proxy it server-side before deploying.
   </footer>
 
 </div>
 
 <script>
 const HEADERS = { 'User-Agent': '(mikes-weather-dashboard-prototype, contact@example.com)' };
+
+// Synoptic Data (MesoWest) API — get a free token at https://customer.synopticdata.com/, then set it here
+// (or better, proxy it server-side before deploying, same as any API key shipped in page source)
+const SYNOPTIC_TOKEN = 'YOUR_SYNOPTIC_API_TOKEN';
+const ALTA_LAT = 40.5885, ALTA_LON = -111.6448;
 
 function setClock(){
   document.getElementById('clock-time').textContent =
@@ -231,6 +242,51 @@ async function loadForecastDiscussion(){
   }
 }
 
+// --- Alta station observations (temp, wind, snow depth) via Synoptic Data ---
+async function loadAltaStations(){
+  const grid = document.getElementById('alta-stations');
+  if(SYNOPTIC_TOKEN === 'YOUR_SYNOPTIC_API_TOKEN'){
+    grid.innerHTML = `<p class="stale" style="grid-column:1/-1;">Add a Synoptic Data API token (see README) to enable this panel. <a href="https://customer.synopticdata.com/" target="_blank" rel="noopener">Get a free token &rarr;</a></p>`;
+    return;
+  }
+  try{
+    const url = `https://api.synopticdata.com/v2/stations/latest?radius=${ALTA_LAT},${ALTA_LON},3&limit=8&units=english&vars=air_temp,wind_speed,wind_gust,snow_depth,snow_accum&token=${SYNOPTIC_TOKEN}`;
+    const data = await fetchJSON(url);
+    const stations = data.STATION || [];
+    if(stations.length === 0){
+      grid.innerHTML = '<p class="stale" style="grid-column:1/-1;">No stations reporting near Alta right now.</p>';
+      return;
+    }
+    grid.innerHTML = '';
+    stations.forEach(st => {
+      const obs = st.OBSERVATIONS || {};
+      const temp = obs.air_temp_value_1 && obs.air_temp_value_1.value;
+      const wind = obs.wind_speed_value_1 && obs.wind_speed_value_1.value;
+      const gust = obs.wind_gust_value_1 && obs.wind_gust_value_1.value;
+      const snowDepth = obs.snow_depth_value_1 && obs.snow_depth_value_1.value;
+
+      const card = document.createElement('div');
+      card.className = 'station';
+      if(temp == null && wind == null && snowDepth == null){
+        card.innerHTML = `
+          <p class="name">${st.NAME || st.STID}</p>
+          <p class="id">${st.STID}</p>
+          <p class="unavailable">No recent data</p>`;
+      } else {
+        card.innerHTML = `
+          <p class="name">${st.NAME || st.STID}</p>
+          <p class="id">${st.STID}</p>
+          <p class="metric">${temp != null ? Math.round(temp) + '&deg;f' : '--'}</p>
+          <p class="sub">${wind != null ? 'wind ' + Math.round(wind) + ' mph' + (gust != null ? ' (gust ' + Math.round(gust) + ')' : '') : 'wind n/a'}</p>
+          <p class="sub">${snowDepth != null ? 'snow depth ' + Math.round(snowDepth) + '"' : 'snow depth n/a'}</p>`;
+      }
+      grid.appendChild(card);
+    });
+  } catch(err){
+    grid.innerHTML = `<p class="stale" style="grid-column:1/-1;">Synoptic Data unavailable right now (${err.message}). <a href="https://viewer.synopticdata.com/map/data/now/air-temperature#map=11/${ALTA_LAT}/${ALTA_LON}" target="_blank" rel="noopener">View on the Synoptic Data map &rarr;</a></p>`;
+  }
+}
+
 // hide the "loading..." overlay on an iframe once it fires 'load'
 // (note: this fires even if the embedded page's own content failed inside the frame,
 // since cross-origin frames don't expose that detail to the parent page)
@@ -242,10 +298,10 @@ function wireEmbed(iframeId, loadingId){
 
 loadLocation('loc-slc', 40.73495526447499, -111.86529085019185);
 loadLocation('loc-parkcity', 40.6511, -111.5084);
-loadLocation('loc-alta', 40.5885, -111.6448);
+loadLocation('loc-alta', ALTA_LAT, ALTA_LON);
 loadForecastDiscussion();
+loadAltaStations();
 wireEmbed('canyon-iframe', 'canyon-loading');
-wireEmbed('alta-iframe', 'alta-loading');
 </script>
 </body>
 </html>
