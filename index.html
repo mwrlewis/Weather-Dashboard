@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cottonwood Canyons Weather Dashboard</title>
+<title>Mike's Weather Dashboard</title>
 <style>
   :root{
     --ink:#1b2430;
@@ -35,22 +35,14 @@
   header.top{
     display:flex;justify-content:space-between;align-items:flex-end;
     border-bottom:2px solid var(--slate-deep);
-    padding-bottom:16px;margin-bottom:20px;
+    padding-bottom:16px;margin-bottom:24px;
   }
   header.top h1{
-    font-size:22px;font-weight:700;letter-spacing:-0.01em;margin:0;color:var(--slate-deep);
+    font-size:24px;font-weight:700;letter-spacing:-0.01em;margin:0;color:var(--slate-deep);
   }
   header.top .tag{font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
   header.top .clock{font-family:var(--mono);font-size:12px;color:var(--ink-soft);text-align:right;}
   header.top .clock span{display:block;}
-
-  .resorts{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;}
-  .resorts button{
-    font-family:var(--sans);font-size:12px;font-weight:600;
-    background:var(--card);border:1px solid var(--line);color:var(--ink-soft);
-    padding:6px 14px;border-radius:20px;cursor:pointer;
-  }
-  .resorts button.active{background:var(--slate-deep);color:#fff;border-color:var(--slate-deep);}
 
   section{margin-bottom:26px;}
   .section-label{
@@ -58,49 +50,43 @@
     color:var(--ink-faint);margin:0 0 10px;
   }
 
-  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px;}
-  .card .k{font-size:11px;color:var(--ink-soft);margin:0 0 6px;display:flex;align-items:center;gap:6px;}
-  .card .v{font-family:var(--mono);font-size:26px;font-weight:600;margin:0;color:var(--ink);}
-  .card .v small{font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-soft);}
-  .card.warn{background:var(--amber-bg);}
-  .card.warn .k{color:var(--amber);}
-  .card.warn .v{color:var(--amber);font-size:15px;font-weight:600;}
-  .card.alert{background:var(--red-bg);}
-  .card.alert .v{color:var(--red);font-size:15px;}
-  .stale{color:var(--ink-faint);font-family:var(--mono);font-size:14px;}
+  /* --- top forecast row: SLC / Park City / Alta --- */
+  .loc-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .loc-card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;}
+  .loc-card h2{font-size:14px;font-weight:700;margin:0 0 10px;color:var(--slate-deep);}
+  .loc-card .now{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .loc-card .now img{width:40px;height:40px;}
+  .loc-card .now .t{font-family:var(--mono);font-size:26px;font-weight:600;}
+  .loc-card .now .s{font-size:12px;color:var(--ink-soft);}
+  .loc-card .next{font-size:11px;color:var(--ink-faint);margin:0 0 12px;}
+  .loc-card a{font-size:12px;margin-top:auto;color:var(--slate);}
+  .loc-card .stale{color:var(--ink-faint);font-family:var(--mono);font-size:12px;margin:4px 0 12px;}
 
-  .row2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  /* --- full-width embed panels (Cottonwood Canyons forecast, Forecast discussion) --- */
   .panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;}
-  .panel h2{font-size:14px;font-weight:700;margin:0 0 12px;color:var(--slate-deep);}
+  .panel h2{font-size:14px;font-weight:700;margin:0 0 6px;color:var(--slate-deep);}
+  .panel .sub{font-size:11px;color:var(--ink-faint);margin:0 0 12px;}
+  .panel a.out{font-size:12px;color:var(--slate);display:inline-block;margin-top:10px;}
 
-  .fc-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;}
-  .fc-day{flex:0 0 auto;width:84px;text-align:center;padding:8px 4px;border-radius:6px;}
-  .fc-day:nth-child(odd){background:var(--sky);}
-  .fc-day .d{font-size:11px;color:var(--ink-soft);font-weight:600;}
-  .fc-day img{width:32px;height:32px;margin:4px 0;}
-  .fc-day .t{font-family:var(--mono);font-size:13px;font-weight:600;}
-  .fc-day .p{font-size:10px;color:var(--ink-faint);margin-top:2px;line-height:1.3;}
+  .embed-frame{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--sky);}
+  .embed-frame iframe{width:100%;height:520px;border:0;display:block;background:#fff;}
+  .embed-frame .loading{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:12px;color:var(--ink-faint);background:var(--sky);
+    pointer-events:none;transition:opacity .3s;
+  }
 
-  .radar-frame{border-radius:6px;overflow:hidden;border:1px solid var(--line);}
-  .radar-frame img{width:100%;display:block;}
-  .radar-link{font-size:12px;margin-top:8px;display:inline-block;color:var(--slate);}
+  .afd-text{
+    background:var(--sky);border:1px solid var(--line);border-radius:6px;padding:14px 16px;
+    font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--ink-soft);
+    white-space:pre-wrap;max-height:420px;overflow-y:auto;
+  }
 
-  .stations{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-  .station{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px 14px;}
-  .station .name{font-size:12px;font-weight:600;color:var(--ink);}
-  .station .id{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-bottom:8px;}
-  .station .metric{font-family:var(--mono);font-size:20px;font-weight:600;}
-  .station .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
-  .station .unavailable{font-family:var(--mono);font-size:13px;color:var(--ink-faint);}
+  .canyon-title{font-size:20px;font-weight:700;color:var(--slate-deep);margin:0 0 14px;padding-top:6px;border-top:2px solid var(--slate-deep);padding-top:18px;}
 
-  .cams{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
-  .cam{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;text-decoration:none;color:inherit;display:block;}
-  .cam img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--sky);}
-  .cam .lbl{font-size:11px;font-weight:600;padding:6px 8px;color:var(--ink);}
+  .alta-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 
-  .swe{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px 18px;}
-  .swe img{width:100%;border-radius:4px;}
+  .stale{color:var(--ink-faint);font-family:var(--mono);font-size:14px;}
 
   footer{
     margin-top:30px;padding-top:16px;border-top:1px solid var(--line);
@@ -108,11 +94,9 @@
   }
   a{color:var(--slate);}
 
-  @media (max-width:820px){
-    .strip{grid-template-columns:repeat(2,1fr);}
-    .row2{grid-template-columns:1fr;}
-    .stations{grid-template-columns:repeat(2,1fr);}
-    .cams{grid-template-columns:repeat(2,1fr);}
+  @media (max-width:900px){
+    .loc-row{grid-template-columns:1fr;}
+    .alta-row{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -121,8 +105,8 @@
 
   <header class="top">
     <div>
-      <h1>Cottonwood Canyons weather</h1>
-      <p class="tag">Live conditions &middot; Alta &middot; Brighton &middot; Snowbird &middot; Solitude</p>
+      <h1>Mike's Weather Dashboard</h1>
+      <p class="tag">Salt Lake &middot; Park City &middot; Alta &middot; Cottonwood Canyons</p>
     </div>
     <div class="clock">
       <span id="clock-time">--</span>
@@ -130,112 +114,70 @@
     </div>
   </header>
 
-  <div class="resorts">
-    <button class="active" data-resort="all">All canyons</button>
-    <button data-resort="alta">Alta</button>
-    <button data-resort="brighton">Brighton</button>
-    <button data-resort="snowbird">Snowbird</button>
-    <button data-resort="solitude">Solitude</button>
-  </div>
-
   <section>
-    <p class="section-label">Live conditions</p>
-    <div class="strip">
-      <div class="card">
-        <p class="k">Brighton's Crest temp</p>
-        <p class="v" id="temp-brc">&hellip;</p>
+    <div class="loc-row">
+      <div class="loc-card">
+        <h2>Salt Lake City</h2>
+        <div id="loc-slc"><p class="stale">Loading forecast&hellip;</p></div>
+        <a href="https://forecast.weather.gov/MapClick.php?lat=40.73495526447499&lon=-111.86529085019185" target="_blank" rel="noopener">Full forecast on weather.gov &rarr;</a>
       </div>
-      <div class="card">
-        <p class="k">Mt Baldy wind</p>
-        <p class="v" id="wind-baldy">&hellip;</p>
+      <div class="loc-card">
+        <h2>Park City</h2>
+        <div id="loc-parkcity"><p class="stale">Loading forecast&hellip;</p></div>
+        <a href="https://forecast.weather.gov/MapClick.php?lat=40.6511&lon=-111.5084" target="_blank" rel="noopener">Full forecast on weather.gov &rarr;</a>
       </div>
-      <div class="card warn">
-        <p class="k">Avalanche danger</p>
-        <p class="v" id="avy-status">Checking&hellip;</p>
-      </div>
-      <div class="card">
-        <p class="k">Road status</p>
-        <p class="v" id="road-status" style="font-size:15px;">Checking&hellip;</p>
+      <div class="loc-card">
+        <h2>Alta</h2>
+        <div id="loc-alta"><p class="stale">Loading forecast&hellip;</p></div>
+        <a href="https://forecast.weather.gov/MapClick.php?lat=40.5885&lon=-111.6448" target="_blank" rel="noopener">Full forecast on weather.gov &rarr;</a>
       </div>
     </div>
   </section>
 
   <section>
-    <div class="row2">
-      <div class="panel">
-        <h2>7-day forecast &mdash; Brighton area</h2>
-        <div class="fc-row" id="forecast-row">
-          <p class="stale">Loading forecast&hellip;</p>
-        </div>
+    <div class="panel">
+      <h2>Cottonwood Canyons forecast</h2>
+      <p class="sub">NWS Salt Lake avalanche &amp; canyon weather forecast, embedded live below.</p>
+      <div class="embed-frame">
+        <div class="loading" id="canyon-loading">loading weather.gov&hellip;</div>
+        <iframe id="canyon-iframe" src="https://www.weather.gov/slc/AvalancheWeather" title="Cottonwood Canyons forecast" loading="lazy"></iframe>
       </div>
-      <div class="panel">
-        <h2>NOAA radar</h2>
-        <div class="radar-frame">
-          <img id="radar-img" alt="NOAA regional radar loop" src="">
-        </div>
-        <a class="radar-link" id="radar-link" href="#" target="_blank" rel="noopener">View interactive radar map &rarr;</a>
+      <a class="out" href="https://www.weather.gov/slc/AvalancheWeather" target="_blank" rel="noopener">Open in a new tab &rarr;</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <h2>Forecast discussion</h2>
+      <p class="sub">Latest Area Forecast Discussion from the NWS Salt Lake City office.</p>
+      <div class="afd-text" id="afd-text">Loading forecast discussion&hellip;</div>
+      <a class="out" href="https://forecast.weather.gov/product.php?site=SLC&issuedby=SLC&product=AFD&format=CI&version=1&glossary=1" target="_blank" rel="noopener">Open on weather.gov &rarr;</a>
+    </div>
+  </section>
+
+  <p class="canyon-title">Alta</p>
+
+  <section>
+    <div class="panel">
+      <h2>Snowfall &amp; wind</h2>
+      <p class="sub">Live station data (hourly snowfall, snow-water equivalent, and Base/Mid/Baldy wind) from wxstns.net, embedded below.</p>
+      <div class="embed-frame">
+        <div class="loading" id="alta-loading">loading wxstns.net&hellip;</div>
+        <iframe id="alta-iframe" src="https://wxstns.net/ALTA.html" title="Alta snowfall and wind" loading="lazy" style="height:900px;"></iframe>
       </div>
-    </div>
-  </section>
-
-  <section>
-    <p class="section-label">Station data</p>
-    <div class="stations" id="stations-row">
-      <div class="station"><p class="name">Alta guard house</p><p class="id">AGD</p><p class="unavailable">Loading&hellip;</p></div>
-      <div class="station"><p class="name">Brighton's Crest</p><p class="id">BRC</p><p class="unavailable">Loading&hellip;</p></div>
-      <div class="station"><p class="name">Mt Baldy</p><p class="id">AMB</p><p class="unavailable">Loading&hellip;</p></div>
-      <div class="station"><p class="name">Tri-County Peak</p><p class="id">PKC</p><p class="unavailable">Loading&hellip;</p></div>
-    </div>
-  </section>
-
-  <section>
-    <p class="section-label">Cameras</p>
-    <div class="cams">
-      <a class="cam" href="https://altaskiarea.s3-us-west-2.amazonaws.com/mountain-cams/Collins_Snow_Stake.jpg" target="_blank" rel="noopener">
-        <img src="https://altaskiarea.s3-us-west-2.amazonaws.com/mountain-cams/Collins_Snow_Stake.jpg" alt="Alta snow stake camera" loading="lazy">
-        <p class="lbl">Alta</p>
-      </a>
-      <a class="cam" href="https://www.youtube.com/watch?v=4a-3iEM7bHk" target="_blank" rel="noopener">
-        <img src="https://img.youtube.com/vi/4a-3iEM7bHk/mqdefault.jpg" alt="Brighton camera" loading="lazy">
-        <p class="lbl">Brighton</p>
-      </a>
-      <a class="cam" href="https://www.snowbird.com/the-mountain/webcams/view-all-webcams/snowstake-webcam" target="_blank" rel="noopener">
-        <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--sky);color:var(--ink-faint);font-size:11px;">Open feed &rarr;</div>
-        <p class="lbl">Snowbird</p>
-      </a>
-      <a class="cam" href="https://www.solitudemountain.com/mountain-and-village/webcams" target="_blank" rel="noopener">
-        <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--sky);color:var(--ink-faint);font-size:11px;">Open feed &rarr;</div>
-        <p class="lbl">Solitude</p>
-      </a>
-    </div>
-    <div id="udot-cams" style="margin-top:10px;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
-      <p class="stale" style="grid-column:1/-1;">Loading UDOT canyon cameras&hellip;</p>
-    </div>
-  </section>
-
-  <section>
-    <p class="section-label">Annual SWE comparison &mdash; Brighton</p>
-    <div class="swe">
-      <img id="swe-img" alt="Snow water equivalent year-over-year chart for Brighton" src="">
-      <a class="radar-link" href="https://www.cbrfc.noaa.gov/dbdata/station/swegraph/swegraph_hc.html?snotels=BRIU1&years=-2016-2017-2018-2019-2020-2021-2022-2023-2024-2025-2026&coloryrs=1&show_stats=0&show_mean=1" target="_blank" rel="noopener">View interactive SWE graph &rarr;</a>
+      <a class="out" href="https://wxstns.net/ALTA.html" target="_blank" rel="noopener">Open in a new tab &rarr;</a>
     </div>
   </section>
 
   <footer>
-    Data: NWS API (api.weather.gov), NOAA radar, UDOT Traffic API, resort camera feeds. Some feeds (avalanche forecast, 48hr/30-day snow depth, SNOTEL SWE) are dormant off-season and will populate automatically once winter observations resume.
-    <br>Built for ccweather.com &middot; live data fetched client-side on page load. UDOT is throttled to 10 calls/60s per key &mdash; before this goes live, move the key server-side (a small proxy endpoint) rather than shipping it in page source.
+    Data: NWS API (api.weather.gov) for point forecasts and forecast discussion, NWS Salt Lake (weather.gov/slc) for the Cottonwood Canyons forecast, wxstns.net for Alta snowfall/wind station data.
+    <br>Embedded panels (Cottonwood Canyons forecast, Alta snowfall &amp; wind) load their source page directly in an iframe &mdash; if a panel stays blank, the source site may block embedding; use the "Open in a new tab" link below it.
   </footer>
 
 </div>
 
 <script>
-// Cottonwood Canyons coordinates (Brighton area, matches ccweather.com source)
-const LAT = 40.590158, LON = -111.637535;
-const HEADERS = { 'User-Agent': '(ccweather-dashboard-prototype, contact@ccweather.com)' };
-
-// UDOT Traffic API — get a key at https://www.udottraffic.utah.gov/, then set it here (or better, proxy server-side before deploying)
-const UDOT_KEY = 'YOUR_UDOT_API_KEY';
-const UDOT_BASE = 'https://www.udottraffic.utah.gov/api/v2/get';
+const HEADERS = { 'User-Agent': '(mikes-weather-dashboard-prototype, contact@example.com)' };
 
 function setClock(){
   document.getElementById('clock-time').textContent =
@@ -250,155 +192,60 @@ async function fetchJSON(url){
   return res.json();
 }
 
-// --- 7-day forecast + top-strip temp via NWS grid forecast ---
-async function loadForecast(){
+// --- Point forecast cards (SLC / Park City / Alta) via NWS grid forecast ---
+async function loadLocation(elId, lat, lon){
+  const el = document.getElementById(elId);
   try{
-    const point = await fetchJSON(`https://api.weather.gov/points/${LAT},${LON}`);
+    const point = await fetchJSON(`https://api.weather.gov/points/${lat},${lon}`);
     const forecast = await fetchJSON(point.properties.forecast);
-    const periods = forecast.properties.periods.slice(0, 7);
-
-    document.getElementById('temp-brc').innerHTML =
-      `${periods[0].temperature}<small>&deg;f, ${periods[0].shortForecast.toLowerCase()}</small>`;
-
-    const row = document.getElementById('forecast-row');
-    row.innerHTML = '';
-    periods.forEach(p => {
-      const el = document.createElement('div');
-      el.className = 'fc-day';
-      el.innerHTML = `
-        <p class="d">${p.name.slice(0,10)}</p>
-        <img src="${p.icon}" alt="${p.shortForecast}">
-        <p class="t">${p.temperature}&deg;</p>
-        <p class="p">${p.shortForecast}</p>`;
-      row.appendChild(el);
-    });
+    const periods = forecast.properties.periods;
+    const now = periods[0];
+    const next = periods[1];
+    el.innerHTML = `
+      <div class="now">
+        <img src="${now.icon}" alt="${now.shortForecast}">
+        <div>
+          <span class="t">${now.temperature}&deg;<small style="font-family:var(--sans);font-size:12px;font-weight:400;">f</small></span>
+          <div class="s">${now.name}: ${now.shortForecast}</div>
+        </div>
+      </div>
+      <p class="next">${next.name}: ${next.temperature}&deg;, ${next.shortForecast}</p>`;
     document.getElementById('clock-status').textContent = 'live';
     document.getElementById('clock-status').style.color = '#3b8f5c';
   } catch(err){
-    document.getElementById('forecast-row').innerHTML =
-      `<p class="stale">Forecast unavailable right now (${err.message}). <a href="https://forecast.weather.gov/MapClick.php?lat=${LAT}&lon=${LON}" target="_blank" rel="noopener">View on weather.gov &rarr;</a></p>`;
-    document.getElementById('temp-brc').textContent = '--';
+    el.innerHTML = `<p class="stale">Forecast unavailable (${err.message}).</p>`;
   }
 }
 
-// --- Station observations (NWS mesonet stations) ---
-async function loadStation(stationId, elIndex, label){
-  const cards = document.querySelectorAll('#stations-row .station');
-  const card = cards[elIndex];
+// --- Forecast discussion: latest AFD text product for the SLC office ---
+async function loadForecastDiscussion(){
+  const el = document.getElementById('afd-text');
   try{
-    const obs = await fetchJSON(`https://api.weather.gov/stations/${stationId}/observations/latest`);
-    const p = obs.properties;
-    const tempF = p.temperature.value !== null ? (p.temperature.value * 9/5 + 32).toFixed(0) : null;
-    const windMph = p.windSpeed.value !== null ? (p.windSpeed.value * 0.621371).toFixed(0) : null;
-    card.innerHTML = `
-      <p class="name">${label}</p>
-      <p class="id">${stationId}</p>
-      <p class="metric">${tempF !== null ? tempF + '&deg;f' : '--'}</p>
-      <p class="sub">${windMph !== null ? 'wind ' + windMph + ' mph' : 'wind n/a'}</p>`;
-    if(stationId === 'AMB' && windMph !== null){
-      document.getElementById('wind-baldy').innerHTML = `${windMph}<small>mph</small>`;
-    }
+    const list = await fetchJSON('https://api.weather.gov/products/types/AFD/locations/SLC');
+    const latest = list['@graph'] && list['@graph'][0];
+    if(!latest) throw new Error('no products returned');
+    const product = await fetchJSON(`https://api.weather.gov/products/${latest.id}`);
+    el.textContent = product.productText || 'Discussion text unavailable.';
   } catch(err){
-    card.innerHTML = `
-      <p class="name">${label}</p>
-      <p class="id">${stationId}</p>
-      <p class="unavailable">Unavailable</p>`;
-    if(stationId === 'AMB'){
-      document.getElementById('wind-baldy').textContent = '--';
-    }
+    el.innerHTML = `Forecast discussion unavailable right now (${err.message}). <a href="https://forecast.weather.gov/product.php?site=SLC&issuedby=SLC&product=AFD&format=CI&version=1&glossary=1" target="_blank" rel="noopener">View on weather.gov &rarr;</a>`;
   }
 }
 
-// --- Avalanche forecast: dormant off-season, always flag as offline for now ---
-function loadAvalanche(){
-  const el = document.getElementById('avy-status');
-  el.textContent = 'Offline (off-season)';
+// hide the "loading..." overlay on an iframe once it fires 'load'
+// (note: this fires even if the embedded page's own content failed inside the frame,
+// since cross-origin frames don't expose that detail to the parent page)
+function wireEmbed(iframeId, loadingId){
+  const frame = document.getElementById(iframeId);
+  const loading = document.getElementById(loadingId);
+  frame.addEventListener('load', () => { loading.style.opacity = '0'; });
 }
 
-// --- Radar image (public static NWS radar loop, no CORS needed for <img>) ---
-function loadRadar(){
-  document.getElementById('radar-img').src = 'https://radar.weather.gov/ridge/standard/CONUS_loop.gif';
-  document.getElementById('radar-link').href = 'https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJuYXRpb25hbCJ9fQ==';
-}
-
-// --- SWE chart image (static image, direct hotlink) ---
-function loadSWE(){
-  document.getElementById('swe-img').src = 'https://ccweather.com/swegraph_hc.png';
-}
-
-// --- UDOT road conditions, filtered to Big/Little Cottonwood Canyon ---
-async function loadRoadConditions(){
-  const el = document.getElementById('road-status');
-  try{
-    const res = await fetch(`${UDOT_BASE}/roadconditions?key=${UDOT_KEY}&format=json`);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const all = await res.json();
-    const canyon = all.filter(c => /cottonwood/i.test(c.RoadwayName || ''));
-    if(canyon.length === 0){
-      el.textContent = 'No canyon-specific reports';
-      return;
-    }
-    el.innerHTML = canyon.slice(0, 2).map(c =>
-      `${c.RoadwayName.replace(/Cottonwood.*$/i,'Cottonwood Cyn')}: ${c.RoadCondition}`
-    ).join('<br>');
-  } catch(err){
-    el.textContent = 'Unavailable';
-  }
-}
-
-// --- UDOT cameras, filtered to canyon roadways (SR-190 / SR-210 / Cottonwood) ---
-async function loadUdotCameras(){
-  const grid = document.getElementById('udot-cams');
-  try{
-    const res = await fetch(`${UDOT_BASE}/cameras?key=${UDOT_KEY}&format=json`);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const all = await res.json();
-    const canyon = all.filter(c =>
-      /cottonwood|sr-190|sr-210/i.test(`${c.Roadway} ${c.Location}`)
-    ).slice(0, 5);
-
-    if(canyon.length === 0){
-      grid.innerHTML = '<p class="stale" style="grid-column:1/-1;">No canyon cameras returned. <a href="https://www.udottraffic.utah.gov/" target="_blank" rel="noopener">Browse all UDOT cameras &rarr;</a></p>';
-      return;
-    }
-    grid.innerHTML = '';
-    canyon.forEach(cam => {
-      const view = (cam.Views && cam.Views[0]) || {};
-      const a = document.createElement('a');
-      a.className = 'cam';
-      a.href = view.Url || 'https://www.udottraffic.utah.gov/';
-      a.target = '_blank';
-      a.rel = 'noopener';
-      a.innerHTML = `
-        <div style="aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--sky);color:var(--ink-faint);font-size:11px;text-align:center;padding:6px;">
-          <i class="ti ti-camera" style="font-size:16px;display:block;margin-bottom:4px;" aria-hidden="true"></i>${cam.Direction || ''}
-        </div>
-        <p class="lbl">${cam.Roadway || 'UDOT'}</p>`;
-      grid.appendChild(a);
-    });
-  } catch(err){
-    grid.innerHTML = `<p class="stale" style="grid-column:1/-1;">UDOT feed unavailable (${err.message}). <a href="https://www.udottraffic.utah.gov/cctv" target="_blank" rel="noopener">View cameras directly &rarr;</a></p>`;
-  }
-}
-
-loadForecast();
-loadStation('AGD', 0, 'Alta guard house');
-loadStation('BRC', 1, "Brighton's Crest");
-loadStation('AMB', 2, 'Mt Baldy');
-loadStation('PKC', 3, 'Tri-County Peak');
-loadAvalanche();
-loadRadar();
-loadSWE();
-loadRoadConditions();
-loadUdotCameras();
-
-// resort filter buttons (visual only for now — filters camera grid)
-document.querySelectorAll('.resorts button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.resorts button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
+loadLocation('loc-slc', 40.73495526447499, -111.86529085019185);
+loadLocation('loc-parkcity', 40.6511, -111.5084);
+loadLocation('loc-alta', 40.5885, -111.6448);
+loadForecastDiscussion();
+wireEmbed('canyon-iframe', 'canyon-loading');
+wireEmbed('alta-iframe', 'alta-loading');
 </script>
 </body>
 </html>

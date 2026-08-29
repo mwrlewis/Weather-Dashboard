@@ -1,21 +1,22 @@
-# Cottonwood Canyons Weather Dashboard
+# Mike's Weather Dashboard
 
-A live weather dashboard for the Cottonwood Canyons (Alta, Brighton, Snowbird, Solitude), built as a Google Apps Script web app.
+A Google Apps Script web app pulling together Wasatch Front / Cottonwood Canyons weather in one page.
 
 - `Code.gs` — Apps Script entry point, serves `index.html` via `HtmlService`.
-- `index.html` — the dashboard UI. Pulls live data client-side from:
-  - NWS API (`api.weather.gov`) for forecast and station observations
-  - NOAA radar loop
-  - UDOT Traffic API for road conditions and canyon cameras
-  - Resort camera feeds (Alta, Brighton, Snowbird, Solitude)
-  - CBRFC SWE (snow water equivalent) graph
+- `index.html` — the dashboard UI:
+  - **Point forecasts** for Salt Lake City, Park City, and Alta — fetched client-side from the NWS API (`api.weather.gov`), matching the current conditions shown on the corresponding [forecast.weather.gov MapClick](https://forecast.weather.gov/MapClick.php) pages for each location.
+  - **Cottonwood Canyons forecast** — the NWS Salt Lake avalanche/canyon weather forecast (`weather.gov/slc/AvalancheWeather`), embedded live in an iframe.
+  - **Forecast discussion** — the latest Area Forecast Discussion (AFD) text product for the SLC office, fetched via the NWS products API and rendered as plain text.
+  - **Alta snowfall & wind** — live station data (hourly snowfall, SWE, and Base/Mid/Baldy wind) from [wxstns.net](https://wxstns.net/ALTA.html), embedded live in an iframe.
 
 ## Setup
 
 To deploy as an Apps Script web app:
 
 1. Create a new Apps Script project and add `Code.gs` and `index.html`.
-2. In `index.html`, set `UDOT_KEY` to your own UDOT Traffic API key (request one at https://www.udottraffic.utah.gov/). For a production deployment, proxy this key through a small server-side endpoint instead of shipping it in page source — UDOT throttles to 10 calls/60s per key.
-3. Deploy as a web app (`doGet` is the entry point).
+2. Deploy as a web app (`doGet` is the entry point).
 
-Some feeds (avalanche forecast, 48hr/30-day snow depth, SNOTEL SWE) are dormant off-season and populate automatically once winter observations resume.
+## Notes
+
+- The Cottonwood Canyons forecast and Alta snowfall/wind panels are embedded via `<iframe>` pointing at their live source pages. If a source site sends `X-Frame-Options` blocking embedding, the panel will appear blank — use the "Open in a new tab" link below each panel as a fallback.
+- The NWS point-forecast and forecast-discussion panels use `api.weather.gov` directly and don't require an API key.
